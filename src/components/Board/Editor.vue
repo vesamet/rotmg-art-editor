@@ -7,11 +7,25 @@
       <div class="map">
         <template v-for="y in height">
           <div :key="`${y}y`" class="pixel-row">
-            <div v-for="x in width" :key="`${x}x`" class="pixel">v</div>
+            <div
+              v-for="x in width"
+              :key="`${x}x`"
+              class="map-pixel no-select"
+              @click="$emit('on-click', { x, y })"
+            >
+              x
+            </div>
           </div>
         </template>
       </div>
-      <div class="pixels"></div>
+      <div class="pixels">
+        <div
+          v-for="pixel in pixels"
+          :key="`${pixel.x}-${pixel.y}`"
+          class="pixel no-select"
+          :style="renderPixel(pixel)"
+        ></div>
+      </div>
     </div>
   </div>
 </template>
@@ -22,13 +36,7 @@ export default {
     pixels: {
       type: Array,
       default() {
-        return [
-          {
-            x: 1,
-            y: 1,
-            color: "red",
-          },
-        ]
+        return []
       },
     },
     width: {
@@ -49,12 +57,29 @@ export default {
     render() {
       this.localPixels = this.pixels
     },
+    renderPixel(pixel) {
+      let styleString = `
+      background-color: ${pixel.color || "transparent"};
+      top: ${(pixel.y - 1) * 20}px;
+      left: ${(pixel.x - 1) * 20}px;
+      `
+      return styleString
+    },
   },
   watch: {
     pixels: {
       deep: true,
       immediate: true,
-      // We have to move our method to a handler field
+      handler() {
+        this.render()
+      },
+    },
+    width: {
+      handler() {
+        this.render()
+      },
+    },
+    height: {
       handler() {
         this.render()
       },
@@ -66,8 +91,8 @@ export default {
 <style scoped>
 .grid-container {
   overflow: auto;
-  max-height: 700px;
-  padding: 5px;
+  max-height: 500px;
+  padding: 10px;
 }
 .grid {
   margin: auto;
@@ -85,18 +110,45 @@ export default {
 }
 .pixels {
   z-index: 2;
+  pointer-events: none;
 }
+.map-pixel,
 .pixel {
-  background-color: rgba(255, 255, 255, 0.7);
-  border: 2px solid var(--v-primary);
   width: 20px;
   height: 20px;
+}
+.map-pixel {
+  background-color: white;
+  opacity: 0.5;
+  color: var(--v-secondary-base);
+  border: 1px solid var(--v-secondary-base);
   display: inline-block;
+  transition: all 0.3s ease;
+}
+.map-pixel:hover {
+  transform: scale(1.1);
+  cursor: crosshair;
+  opacity: 1;
+}
+.pixel {
+  background-color: lightcoral;
+  display: block;
+  position: absolute;
 }
 
 .pixel,
 .pixel-row {
   margin: 0;
   padding: 0;
+}
+
+.no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+  supported by Chrome, Edge, Opera and Firefox */
 }
 </style>

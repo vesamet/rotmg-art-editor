@@ -1,6 +1,6 @@
 <template>
   <v-container class="board-container">
-    <v-row align="center">
+    <v-row align="stretch" justify="center">
       <v-col cols="12">
         <h1 class="board-title">Rotmg art editor</h1>
       </v-col>
@@ -10,15 +10,20 @@
             <v-icon>mdi-file-send</v-icon>
           </v-btn>
           <Editor
-        /></v-card>
+            :pixels="pixels"
+            :width="width"
+            :height="height"
+            @on-click="editPixel"
+          />
+        </v-card>
       </v-col>
       <v-col cols="12" md="6" order="3" order-md="2" class="mb-2">
-        <v-card class="render-card" color="secondary lighten-2">
+        <v-card class="render-card fill-height" color="secondary lighten-2">
           <v-btn color="secondary" dark small absolute bottom right fab>
             <v-icon>mdi-content-save</v-icon>
           </v-btn>
-          <Sprite
-        /></v-card>
+          <Sprite />
+        </v-card>
       </v-col>
       <v-col cols="12" order="2" order-md="3">
         <v-card class="actions-card" color="primary lighten-2">
@@ -26,27 +31,73 @@
             <v-col cols="12" md="6">
               <v-card class="ma-2 mr-0 pb-6">
                 <v-subheader>Tools</v-subheader>
-                <v-btn class="mx-2 mt-0">
+                <v-btn
+                  class="mx-2 mt-0"
+                  :color="tool === 'pencil' ? 'primary' : ''"
+                  @click="tool = 'pencil'"
+                >
                   <v-icon left>mdi-pencil</v-icon> Pencil</v-btn
                 >
-                <v-btn class="mx-2 mt-0">
+                <v-btn
+                  class="mx-2 mt-0"
+                  :color="tool === 'eraser' ? 'primary' : ''"
+                  @click="tool = 'eraser'"
+                >
                   <v-icon left>mdi-eraser</v-icon> Eraser</v-btn
                 >
-                <v-btn class="mx-2 mt-0">
+                <v-btn
+                  class="mx-2 mt-0"
+                  :color="tool === 'picker' ? 'primary' : ''"
+                  @click="tool = 'picker'"
+                >
                   <v-icon left>mdi-eyedropper</v-icon> Picker</v-btn
                 >
               </v-card>
               <v-card class="ma-2 mr-0 pb-6">
                 <v-subheader>Time travel</v-subheader>
-                <v-btn class="mx-2 mt-0" color="warning lighten-2">
+                <v-btn
+                  class="mx-2 mt-0"
+                  color="warning lighten-2"
+                  @click="restart"
+                >
                   <v-icon left>mdi-cached</v-icon> Restart</v-btn
                 >
-                <v-btn class="mx-2 mt-0">
+                <v-btn
+                  class="mx-2 mt-0"
+                  :disabled="!history[historyIndex - 1]"
+                  @click="undo"
+                >
                   <v-icon left>mdi-undo</v-icon> Undo</v-btn
                 >
-                <v-btn class="mx-2 mt-0">
+                <v-btn
+                  class="mx-2 mt-0"
+                  :disabled="!history[historyIndex + 1]"
+                  @click="redo"
+                >
                   <v-icon left>mdi-redo</v-icon> Redo</v-btn
                 >
+              </v-card>
+              <v-card class="ma-2 mr-0 pb-6">
+                <v-subheader>Canvas</v-subheader>
+                <v-slider
+                  v-model="width"
+                  label="Width"
+                  :thumb-size="24"
+                  class="mr-3"
+                  style="margin-left: 18px; margin-top: 10px;"
+                  thumb-label="always"
+                  :min="1"
+                  @change="cleanCanvas"
+                ></v-slider>
+                <v-slider
+                  v-model="height"
+                  label="Height"
+                  :thumb-size="24"
+                  class="mx-3"
+                  thumb-label="always"
+                  :min="1"
+                  @change="cleanCanvas"
+                ></v-slider>
               </v-card>
             </v-col>
             <v-col cols="12" md="6">
@@ -62,7 +113,7 @@
                   hide-inputs
                   swatches-max-height="100px"
                 ></v-color-picker>
-                <p>{{ color }}</p>
+                <p>{{ color }} {{ historyIndex }}</p>
               </v-card>
             </v-col>
           </v-row>
@@ -73,6 +124,7 @@
 </template>
 
 <script>
+import { reject, find, filter, cloneDeep } from "lodash"
 import Editor from "@/components/Board/Editor"
 import Sprite from "@/components/Board/Sprite"
 export default {
@@ -83,8 +135,86 @@ export default {
   data() {
     return {
       color: "",
+      tool: "pencil",
+      width: 10,
+      height: 10,
+      pixels: [],
+      history: [{ pixels: [] }],
+      historyIndex: 0,
     }
   },
+  methods: {
+    editPixel(params) {
+      let pickedPixel
+      switch (this.tool) {
+        case "pencil":
+          this.pixels = reject(this.pixels, (pixel) => {
+            return pixel.x === params.x && pixel.y === params.y
+          })
+          this.pixels.push({ x: params.x, y: params.y, color: this.color })
+          this.addHistory()
+          this.historyIndex = this.history.length - 1
+          break
+        case "eraser":
+          this.pixels = reject(this.pixels, (pixel) => {
+            return pixel.x === params.x && pixel.y === params.y
+          })
+          this.addHistory()
+          break
+        case "picker":
+          pickedPixel = find(this.pixels, (pixel) => {
+            return pixel.x === params.x && pixel.y === params.y
+          })
+          if (pickedPixel && pickedPixel.color) {
+            this.color = pickedPixel.color
+          }
+          this.addHistory()
+          break
+        default:
+          break
+      }
+    },
+    cleanCanvas() {
+      // Remove pixels that are off canvas
+      this.pixels = filter(this.pixels, (pixel) => {
+        return pixel.x <= this.width && pixel.y <= this.height
+      })
+      // Reset history
+      this.resetHistory()
+      this.history = [{ pixels: cloneDeep(this.pixels) }]
+    },
+    addHistory() {
+      this.history.push({
+        pixels: cloneDeep(this.pixels),
+      })
+      if (this.history.length > 10) {
+        this.history.shift()
+      } else {
+        this.historyIndex += 1
+      }
+    },
+    undo() {
+      if (this.history[this.historyIndex - 1]) {
+        this.pixels = cloneDeep(this.history[this.historyIndex - 1].pixels)
+        this.historyIndex -= 1
+      }
+    },
+    redo() {
+      if (this.history[this.historyIndex + 1]) {
+        this.pixels = cloneDeep(this.history[this.historyIndex + 1].pixels)
+        this.historyIndex += 1
+      }
+    },
+    resetHistory() {
+      this.history = [{ pixels: [] }]
+      this.historyIndex = 0
+    },
+    restart() {
+      this.resetHistory()
+      this.pixels = []
+    },
+  },
+  mounted() {},
 }
 </script>
 

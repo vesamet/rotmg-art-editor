@@ -1,12 +1,12 @@
-import Vue from "vue"
-import Vuetify from "vuetify/lib"
+import Vue from "vue";
+import Vuetify from "vuetify/lib";
 
-Vue.use(Vuetify)
+Vue.use(Vuetify);
 
 export default new Vuetify({
   theme: {
     options: {
-      customProperties: true,
+      customProperties: true
     },
     themes: {
       light: {
@@ -16,8 +16,8 @@ export default new Vuetify({
         error: "#e91e63",
         warning: "#ff5722",
         info: "#607d8b",
-        success: "#8bc34a",
-      },
-    },
-  },
-})
+        success: "#8bc34a"
+      }
+    }
+  }
+});

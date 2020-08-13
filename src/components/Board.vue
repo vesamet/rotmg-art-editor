@@ -5,16 +5,11 @@
         <h1 class="board-title">Rotmg art editor</h1>
       </v-col>
       <v-col cols="12" md="6" order="1" order-md="1" class="mb-2">
-        <v-card class="editor-card" color="primary lighten-2">
+        <v-card class="editor-card fill-height" color="primary lighten-2">
           <v-btn color="primary" dark small absolute bottom left fab>
             <v-icon>mdi-file-send</v-icon>
           </v-btn>
-          <Editor
-            :pixels="pixels"
-            :width="width"
-            :height="height"
-            @on-click="editPixel"
-          />
+          <Editor :pixels="pixels" :width="width" :height="height" @on-click="editPixel" />
         </v-card>
       </v-col>
       <v-col cols="12" md="6" order="3" order-md="2" class="mb-2">
@@ -22,7 +17,7 @@
           <v-btn color="secondary" dark small absolute bottom right fab>
             <v-icon>mdi-content-save</v-icon>
           </v-btn>
-          <Sprite />
+          <Sprite :pixels="pixels" :width="width" :height="height" />
         </v-card>
       </v-col>
       <v-col cols="12" order="2" order-md="3">
@@ -36,46 +31,34 @@
                   :color="tool === 'pencil' ? 'primary' : ''"
                   @click="tool = 'pencil'"
                 >
-                  <v-icon left>mdi-pencil</v-icon> Pencil</v-btn
-                >
+                  <v-icon left>mdi-pencil</v-icon>Pencil
+                </v-btn>
                 <v-btn
                   class="mx-2 mt-0"
                   :color="tool === 'eraser' ? 'primary' : ''"
                   @click="tool = 'eraser'"
                 >
-                  <v-icon left>mdi-eraser</v-icon> Eraser</v-btn
-                >
+                  <v-icon left>mdi-eraser</v-icon>Eraser
+                </v-btn>
                 <v-btn
                   class="mx-2 mt-0"
                   :color="tool === 'picker' ? 'primary' : ''"
                   @click="tool = 'picker'"
                 >
-                  <v-icon left>mdi-eyedropper</v-icon> Picker</v-btn
-                >
+                  <v-icon left>mdi-eyedropper</v-icon>Picker
+                </v-btn>
               </v-card>
               <v-card class="ma-2 mr-0 pb-6">
                 <v-subheader>Time travel</v-subheader>
-                <v-btn
-                  class="mx-2 mt-0"
-                  color="warning lighten-2"
-                  @click="restart"
-                >
-                  <v-icon left>mdi-cached</v-icon> Restart</v-btn
-                >
-                <v-btn
-                  class="mx-2 mt-0"
-                  :disabled="!history[historyIndex - 1]"
-                  @click="undo"
-                >
-                  <v-icon left>mdi-undo</v-icon> Undo</v-btn
-                >
-                <v-btn
-                  class="mx-2 mt-0"
-                  :disabled="!history[historyIndex + 1]"
-                  @click="redo"
-                >
-                  <v-icon left>mdi-redo</v-icon> Redo</v-btn
-                >
+                <v-btn class="mx-2 mt-0" color="warning lighten-2" @click="restart">
+                  <v-icon left>mdi-cached</v-icon>Restart
+                </v-btn>
+                <v-btn class="mx-2 mt-0" :disabled="!history[historyIndex - 1]" @click="undo">
+                  <v-icon left>mdi-undo</v-icon>Undo
+                </v-btn>
+                <v-btn class="mx-2 mt-0" :disabled="!history[historyIndex + 1]" @click="redo">
+                  <v-icon left>mdi-redo</v-icon>Redo
+                </v-btn>
               </v-card>
               <v-card class="ma-2 mr-0 pb-6">
                 <v-subheader>Canvas</v-subheader>
@@ -124,13 +107,13 @@
 </template>
 
 <script>
-import { reject, find, filter, cloneDeep } from "lodash"
-import Editor from "@/components/Board/Editor"
-import Sprite from "@/components/Board/Sprite"
+import { reject, find, filter, cloneDeep } from "lodash";
+import Editor from "@/components/Board/Editor";
+import Sprite from "@/components/Board/Sprite";
 export default {
   components: {
     Editor,
-    Sprite,
+    Sprite
   },
   data() {
     return {
@@ -140,82 +123,82 @@ export default {
       height: 10,
       pixels: [],
       history: [{ pixels: [] }],
-      historyIndex: 0,
-    }
+      historyIndex: 0
+    };
   },
   methods: {
     editPixel(params) {
-      let pickedPixel
+      let pickedPixel;
       switch (this.tool) {
         case "pencil":
-          this.pixels = reject(this.pixels, (pixel) => {
-            return pixel.x === params.x && pixel.y === params.y
-          })
-          this.pixels.push({ x: params.x, y: params.y, color: this.color })
-          this.addHistory()
-          this.historyIndex = this.history.length - 1
-          break
+          this.pixels = reject(this.pixels, pixel => {
+            return pixel.x === params.x && pixel.y === params.y;
+          });
+          this.pixels.push({ x: params.x, y: params.y, color: this.color });
+          this.addHistory();
+          this.historyIndex = this.history.length - 1;
+          break;
         case "eraser":
-          this.pixels = reject(this.pixels, (pixel) => {
-            return pixel.x === params.x && pixel.y === params.y
-          })
-          this.addHistory()
-          break
+          this.pixels = reject(this.pixels, pixel => {
+            return pixel.x === params.x && pixel.y === params.y;
+          });
+          this.addHistory();
+          break;
         case "picker":
-          pickedPixel = find(this.pixels, (pixel) => {
-            return pixel.x === params.x && pixel.y === params.y
-          })
+          pickedPixel = find(this.pixels, pixel => {
+            return pixel.x === params.x && pixel.y === params.y;
+          });
           if (pickedPixel && pickedPixel.color) {
-            this.color = pickedPixel.color
+            this.color = pickedPixel.color;
           }
-          this.addHistory()
-          break
+          this.addHistory();
+          break;
         default:
-          break
+          break;
       }
     },
     cleanCanvas() {
       // Remove pixels that are off canvas
-      this.pixels = filter(this.pixels, (pixel) => {
-        return pixel.x <= this.width && pixel.y <= this.height
-      })
+      this.pixels = filter(this.pixels, pixel => {
+        return pixel.x <= this.width && pixel.y <= this.height;
+      });
       // Reset history
-      this.resetHistory()
-      this.history = [{ pixels: cloneDeep(this.pixels) }]
+      this.resetHistory();
+      this.history = [{ pixels: cloneDeep(this.pixels) }];
     },
     addHistory() {
       this.history.push({
-        pixels: cloneDeep(this.pixels),
-      })
+        pixels: cloneDeep(this.pixels)
+      });
       if (this.history.length > 10) {
-        this.history.shift()
+        this.history.shift();
       } else {
-        this.historyIndex += 1
+        this.historyIndex += 1;
       }
     },
     undo() {
       if (this.history[this.historyIndex - 1]) {
-        this.pixels = cloneDeep(this.history[this.historyIndex - 1].pixels)
-        this.historyIndex -= 1
+        this.pixels = cloneDeep(this.history[this.historyIndex - 1].pixels);
+        this.historyIndex -= 1;
       }
     },
     redo() {
       if (this.history[this.historyIndex + 1]) {
-        this.pixels = cloneDeep(this.history[this.historyIndex + 1].pixels)
-        this.historyIndex += 1
+        this.pixels = cloneDeep(this.history[this.historyIndex + 1].pixels);
+        this.historyIndex += 1;
       }
     },
     resetHistory() {
-      this.history = [{ pixels: [] }]
-      this.historyIndex = 0
+      this.history = [{ pixels: [] }];
+      this.historyIndex = 0;
     },
     restart() {
-      this.resetHistory()
-      this.pixels = []
-    },
+      this.resetHistory();
+      this.pixels = [];
+    }
   },
-  mounted() {},
-}
+  mounted() {}
+};
 </script>
 
 <style scoped>

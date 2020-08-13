@@ -36,56 +36,56 @@ export default {
     pixels: {
       type: Array,
       default() {
-        return [];
-      }
+        return []
+      },
     },
     width: {
       type: Number,
-      default: 15
+      default: 15,
     },
     height: {
       type: Number,
-      default: 15
-    }
+      default: 15,
+    },
   },
   data() {
     return {
-      localPixels: []
-    };
+      localPixels: [],
+    }
   },
   methods: {
     render() {
-      this.localPixels = this.pixels;
+      this.localPixels = this.pixels
     },
     renderPixel(pixel) {
       let styleString = `
       background-color: ${pixel.color || "transparent"};
       top: ${(pixel.y - 1) * 20}px;
       left: ${(pixel.x - 1) * 20}px;
-      `;
-      return styleString;
-    }
+      `
+      return styleString
+    },
   },
   watch: {
     pixels: {
       deep: true,
       immediate: true,
       handler() {
-        this.render();
-      }
+        this.render()
+      },
     },
     width: {
       handler() {
-        this.render();
-      }
+        this.render()
+      },
     },
     height: {
       handler() {
-        this.render();
-      }
-    }
-  }
-};
+        this.render()
+      },
+    },
+  },
+}
 </script>
 
 <style scoped>

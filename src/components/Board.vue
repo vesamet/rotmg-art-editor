@@ -2,13 +2,32 @@
   <v-container class="board-container">
     <v-row align="stretch" justify="center">
       <v-col cols="12">
-        <h1 class="board-title">Rotmg art editor</h1>
+        <h1 class="board-title">ROTMG sprite maker 2.0</h1>
       </v-col>
       <v-col cols="12" md="6" order="1" order-md="1" class="mb-2">
         <v-card class="editor-card fill-height" color="primary lighten-2">
-          <v-btn color="primary" dark small absolute bottom left fab>
-            <v-icon>mdi-file-send</v-icon>
-          </v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                color="primary"
+                dark
+                small
+                absolute
+                bottom
+                left
+                fab
+                v-bind="attrs"
+                v-on="on"
+                @click.stop="loaderDialog = true"
+              >
+                <v-icon>mdi-file-send</v-icon>
+              </v-btn>
+            </template>
+            <span>
+              <strong>Load sprite code</strong>
+            </span>
+          </v-tooltip>
+
           <Editor
             :pixels="pixels"
             :width="width"
@@ -19,9 +38,48 @@
       </v-col>
       <v-col cols="12" md="6" order="3" order-md="2" class="mb-2">
         <v-card class="render-card fill-height" color="secondary lighten-2">
-          <v-btn color="secondary" dark small absolute bottom right fab>
-            <v-icon>mdi-content-save</v-icon>
-          </v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                color="secondary"
+                dark
+                small
+                absolute
+                bottom
+                right
+                fab
+                v-bind="attrs"
+                v-on="on"
+                style="margin-right: 50px;"
+                @click.stop="saverDialog = true"
+              >
+                <v-icon>mdi-content-save</v-icon>
+              </v-btn>
+            </template>
+            <span> <strong>Save sprite code</strong></span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                color="secondary"
+                dark
+                small
+                absolute
+                bottom
+                right
+                fab
+                v-bind="attrs"
+                v-on="on"
+              >
+                <v-icon>mdi-file-image-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>
+              <strong>Download your art</strong> <br />
+              Right click on your sprite and click "save image as..."
+            </span>
+          </v-tooltip>
           <div class="render-box">
             <Sprite :pixels="pixels" :width="width" :height="height" />
           </div>
@@ -119,9 +177,40 @@
               </v-card>
             </v-col>
           </v-row>
+          <LoaderDialog
+            :isOpen="loaderDialog"
+            @on-load="loadCode"
+            @on-close="loaderDialog = false"
+          />
+          <SaverDialog
+            :isOpen="saverDialog"
+            @on-close="saverDialog = false"
+            :pixels="pixels"
+            :width="width"
+            :height="height"
+          />
         </v-card>
       </v-col>
-      <v-col cols="12"> </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="12">
+        <div>
+          <p class="float-left board-caption text-left">
+            v 1.2 <br />
+            Made by
+            <a class="author-link" href="https://github.com/vesamet"
+              >Gwenael Guyot</a
+            >
+          </p>
+          <p class="float-right board-caption text-right">
+            This tool is meant to facilitate ROTMG-like sprite creation.<br />
+            <span class="small-caption"
+              >ROTMG is a trademark of DECA LIVE OPERATIONS GMBH. <br />
+              The author is not affiliated with Deca/ROTMG at all.</span
+            >
+          </p>
+        </div>
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -130,10 +219,14 @@
 import { reject, find, filter, cloneDeep } from "lodash"
 import Editor from "@/components/Board/Editor"
 import Sprite from "@/components/Board/Sprite"
+import LoaderDialog from "@/components/Board/LoaderDialog"
+import SaverDialog from "@/components/Board/SaverDialog"
 export default {
   components: {
     Editor,
     Sprite,
+    LoaderDialog,
+    SaverDialog,
   },
   data() {
     return {
@@ -193,6 +286,8 @@ export default {
       ],
       history: [{ pixels: [] }],
       historyIndex: 0,
+      loaderDialog: false,
+      saverDialog: false,
     }
   },
   methods: {
@@ -265,6 +360,13 @@ export default {
       this.resetHistory()
       this.pixels = []
     },
+    loadCode(code) {
+      this.loaderDialog = false
+      this.restart()
+      this.pixels = code.pixels
+      this.width = code.width
+      this.height = code.height
+    },
   },
   mounted() {},
 }
@@ -289,5 +391,17 @@ export default {
 
 .board-title {
   color: white;
+}
+.board-caption {
+  color: white;
+}
+.small-caption {
+  font-size: 0.8em;
+}
+.author-link {
+  color: var(--v-primary-lighten3);
+}
+.author-link:hover {
+  color: var(--v-secondary-lighten3);
 }
 </style>
